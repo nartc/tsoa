@@ -29,9 +29,30 @@ export class ParameterGenerator {
         return this.getQueryParameter(this.parameter);
       case 'Path':
         return this.getPathParameter(this.parameter);
+      case 'FormFile':
+        return this.getFormFileParameter(this.parameter);
       default:
         return this.getPathParameter(this.parameter);
     }
+  }
+
+  private getFormFileParameter(parameter: ts.ParameterDeclaration): Tsoa.Parameter {
+    const parameterName = (parameter.name as ts.Identifier).text;
+    const type = this.getValidatedType(parameter);
+
+    if (!this.supportBodyMethod(this.method)) {
+      throw new GenerateMetadataError(`@FormFile('${parameterName}') Can't support in ${this.method.toUpperCase()} method.`);
+    }
+
+    return {
+      description: this.getParameterDescription(parameter),
+      in: 'formData',
+      name: parameterName,
+      parameterName,
+      required: !parameter.questionToken && !parameter.initializer,
+      type,
+      validators: getParameterValidators(this.parameter, parameterName),
+    };
   }
 
   private getRequestParameter(parameter: ts.ParameterDeclaration): Tsoa.Parameter {
@@ -173,11 +194,11 @@ export class ParameterGenerator {
   }
 
   private supportParameterDecorator(decoratorName: string) {
-    return ['header', 'query', 'parem', 'body', 'bodyprop', 'request'].some((d) => d === decoratorName.toLocaleLowerCase());
+    return ['header', 'query', 'parem', 'body', 'bodyprop', 'request', 'formfile'].some((d) => d === decoratorName.toLocaleLowerCase());
   }
 
   private supportPathDataType(parameterType: Tsoa.Type) {
-    return ['string', 'integer', 'long', 'float', 'double', 'date', 'datetime', 'buffer', 'boolean', 'enum', 'any'].find((t) => t === parameterType.dataType);
+    return ['string', 'integer', 'long', 'float', 'double', 'date', 'datetime', 'buffer', 'boolean', 'enum', 'any', 'file'].find((t) => t === parameterType.dataType);
   }
 
   private getValidatedType(parameter: ts.ParameterDeclaration, extractEnum = true) {

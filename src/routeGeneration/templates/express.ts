@@ -135,6 +135,8 @@ export function RegisterRoutes(app: any) {
                     return ValidateParam(args[key], request.body, models, name, fieldErrors, name + '.');
                 case 'body-prop':
                     return ValidateParam(args[key], request.body[name], models, name, fieldErrors, 'body.');
+                case 'formData':
+                    return ValidateParam(args[key], request.file, models, name, fieldErrors);
             }
         });
         if (Object.keys(fieldErrors).length > 0) {
