@@ -38,7 +38,7 @@ export class ParameterGenerator {
 
   private getFormFileParameter(parameter: ts.ParameterDeclaration): Tsoa.Parameter {
     const parameterName = (parameter.name as ts.Identifier).text;
-    const type = this.getValidatedType(parameter);
+    const type: Tsoa.Type = { dataType: 'file' };
 
     if (!this.supportBodyMethod(this.method)) {
       throw new GenerateMetadataError(`@FormFile('${parameterName}') Can't support in ${this.method.toUpperCase()} method.`);
