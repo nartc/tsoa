@@ -51,6 +51,7 @@ export function ValidateParam(property: TsoaRoute.PropertySchema, value: any, ge
     case 'buffer':
       return validateBuffer(name, value);
     case 'any':
+    case 'file':
       return value;
     default:
       if (property.ref) {

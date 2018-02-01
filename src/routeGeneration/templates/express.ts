@@ -13,7 +13,10 @@ import { {{name}} } from '{{modulePath}}';
 {{#if authenticationModule}}
 import { expressAuthentication } from '{{authenticationModule}}';
 {{/if}}
-
+{{#if useFileUpload}}
+import * as multer from 'multer';
+const upload = multer();
+{{/if}}
 const models: TsoaRoute.Models = {
     {{#each models}}
     "{{@key}}": {
@@ -41,6 +44,9 @@ export function RegisterRoutes(app: any) {
             {{#if security.length}}
             authenticateMiddleware({{json security}}),
             {{/if}}
+              {{#if uploadFile}}
+              upload.single('{{uploadFileName}}')
+              {{/if}}
             function (request: any, response: any, next: any) {
             const args = {
                 {{#each parameters}}
