@@ -256,11 +256,19 @@ export class SpecGenerator {
       }
     });
 
-    return {
+    const operation: Swagger.Operation = {
       operationId: this.getOperationId(method.name),
       produces: ['application/json'],
       responses: swaggerResponses,
     };
+
+    const hasFormData = method.parameters.some(p => p.in === 'formData');
+
+    if (hasFormData) {
+      operation.consumes = ['multipart/form-data'];
+    }
+
+    return operation;
   }
 
   private getOperationId(methodName: string) {
@@ -299,6 +307,7 @@ export class SpecGenerator {
       long: { type: 'integer', format: 'int64' },
       object: { type: 'object' },
       string: { type: 'string' },
+      file: { type: 'file'},
     } as { [name: string]: Swagger.Schema };
 
     return map[type.dataType];

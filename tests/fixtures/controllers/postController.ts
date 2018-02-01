@@ -1,11 +1,21 @@
 import {
-  Body, Patch, Post, Query, Route,
+  Body, Patch, Post, Query, Route, FormFile,
 } from '../../../src';
 import { ModelService } from '../services/modelService';
-import { GenericRequest, TestClassModel, TestModel } from '../testModel';
+import { GenericRequest, TestClassModel, TestModel, TestFile } from '../testModel';
 
 @Route('PostTest')
 export class PostTestController {
+
+  /**
+   *
+   * @param file File Param
+   */
+  @Post('upload')
+  public async upload(@FormFile() file: TestFile) {
+    return file;
+  }
+
   @Post()
   public async postModel( @Body() model: TestModel): Promise<TestModel> {
     return model;
