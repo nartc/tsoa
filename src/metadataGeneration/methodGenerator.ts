@@ -1,21 +1,20 @@
 import * as ts from 'typescript';
-import { getDecorators } from './../utils/decoratorUtils';
-import { getJSDocComment, getJSDocDescription, isExistJSDocTag } from './../utils/jsDocUtils';
-import { normalisePath } from './../utils/pathUtils';
-import { GenerateMetadataError } from './exceptions';
-import { MetadataGenerator } from './metadataGenerator';
-import { ParameterGenerator } from './parameterGenerator';
-import { getInitializerValue, resolveType } from './resolveType';
-import { Tsoa } from './tsoa';
+import {getDecorators} from './../utils/decoratorUtils';
+import {getJSDocComment, getJSDocDescription, isExistJSDocTag} from './../utils/jsDocUtils';
+import {normalisePath} from './../utils/pathUtils';
+import {GenerateMetadataError} from './exceptions';
+import {MetadataGenerator} from './metadataGenerator';
+import {ParameterGenerator} from './parameterGenerator';
+import {getInitializerValue, resolveType} from './resolveType';
+import {Tsoa} from './tsoa';
 
 export class MethodGenerator {
   private method: 'get' | 'post' | 'put' | 'patch' | 'delete';
   private path: string;
 
-  constructor(
-    private readonly node: ts.MethodDeclaration,
-    private readonly parentTags?: string[],
-    private readonly parentSecurity?: Tsoa.Security[]) {
+  constructor(private readonly node: ts.MethodDeclaration,
+              private readonly parentTags?: string[],
+              private readonly parentSecurity?: Tsoa.Security[]) {
     this.processMethodDecorators();
   }
 
@@ -69,11 +68,17 @@ export class MethodGenerator {
     const bodyParameters = parameters.filter((p) => p.in === 'body');
     const bodyProps = parameters.filter((p) => p.in === 'body-prop');
 
+    const hasFormDataParameter = parameters.some(p => p.in === 'formData');
+
     if (bodyParameters.length > 1) {
       throw new GenerateMetadataError(`Only one body parameter allowed in '${this.getCurrentLocation()}' method.`);
     }
     if (bodyParameters.length > 0 && bodyProps.length > 0) {
       throw new GenerateMetadataError(`Choose either during @Body or @BodyProp in '${this.getCurrentLocation()}' method.`);
+    }
+
+    if (hasFormDataParameter && (bodyParameters.length + bodyProps.length > 0)) {
+      throw new Error(`@Body or @BodyProp cannot be used with @FormFile in '${this.getCurrentLocation()}' method.`);
     }
     return parameters;
   }
@@ -87,7 +92,9 @@ export class MethodGenerator {
   private processMethodDecorators() {
     const pathDecorators = getDecorators(this.node, (identifier) => this.supportsPathMethod(identifier.text));
 
-    if (!pathDecorators || !pathDecorators.length) { return; }
+    if (!pathDecorators || !pathDecorators.length) {
+      return;
+    }
     if (pathDecorators.length > 1) {
       throw new GenerateMetadataError(`Only one path decorator in '${this.getCurrentLocation}' method, Found: ${pathDecorators.map((d) => d.text).join(', ')}`);
     }

@@ -3,10 +3,10 @@ import * as handlebars from 'handlebars';
 import * as handlebarsHelpers from 'handlebars-helpers';
 import * as path from 'path';
 import * as tsfmt from 'typescript-formatter';
-import { Tsoa } from '../metadataGeneration/tsoa';
-import { RoutesConfig } from './../config';
-import { normalisePath } from './../utils/pathUtils';
-import { TsoaRoute } from './tsoa-route';
+import {Tsoa} from '../metadataGeneration/tsoa';
+import {RoutesConfig} from './../config';
+import {normalisePath} from './../utils/pathUtils';
+import {TsoaRoute} from './tsoa-route';
 
 export class RouteGenerator {
   private tsfmtConfig = {
@@ -19,7 +19,8 @@ export class RouteGenerator {
     vscode: true,
   };
 
-  constructor(private readonly metadata: Tsoa.Metadata, private readonly options: RoutesConfig) { }
+  constructor(private readonly metadata: Tsoa.Metadata, private readonly options: RoutesConfig) {
+  }
 
   public GenerateRoutes(middlewareTemplate: string, pathTransformer: (path: string) => string) {
     const fileName = `${this.options.routesDir}/routes.ts`;
@@ -61,7 +62,7 @@ export class RouteGenerator {
       handlebars,
     });
 
-    const routesTemplate = handlebars.compile(middlewareTemplate, { noEscape: true });
+    const routesTemplate = handlebars.compile(middlewareTemplate, {noEscape: true});
     const authenticationModule = this.options.authenticationModule ? this.getRelativeImportPath(this.options.authenticationModule) : undefined;
     const iocModule = this.options.iocModule ? this.getRelativeImportPath(this.options.iocModule) : undefined;
 
@@ -85,12 +86,16 @@ export class RouteGenerator {
               parameterObjs[parameter.parameterName] = this.buildParameterSchema(parameter);
             });
 
+            const uploadFileParameter = method.parameters.find(parameter => parameter.type.dataType === 'file');
+
             return {
               method: method.method.toLowerCase(),
               name: method.name,
               parameters: parameterObjs,
               path: pathTransformer(method.path),
               security: method.security,
+              uploadFile: !!uploadFileParameter,
+              uploadFileName: uploadFileParameter && uploadFileParameter.name,
             };
           }),
           modulePath: this.getRelativeImportPath(controller.location),
@@ -101,6 +106,11 @@ export class RouteGenerator {
       environment: process.env,
       iocModule,
       models: this.buildModels(),
+      useFileUpload: this.metadata.controllers.some(controller => {
+        return controller.methods.some(method => {
+          return !!method.parameters.find(parameter => parameter.type.dataType === 'file');
+        });
+      }),
       useSecurity: this.metadata.controllers.some(
         controller => controller.methods.some(method => !!method.security.length),
       ),

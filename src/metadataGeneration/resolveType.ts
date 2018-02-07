@@ -63,6 +63,9 @@ export function resolveType(typeNode: ts.TypeNode, parentNode?: ts.Node, extract
 
   const typeReference = typeNode as ts.TypeReferenceNode;
   if (typeReference.typeName.kind === ts.SyntaxKind.Identifier) {
+    if (typeReference.typeName.text === 'File') {
+      return { dataType: 'file' } as Tsoa.Type;
+    }
     if (typeReference.typeName.text === 'Date') {
       return getDateType(typeNode, parentNode);
     }
