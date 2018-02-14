@@ -37,7 +37,7 @@
     "routes-gen:inversify": "node ./dist/cli.js routes --configuration=inversify-tsoa.json",
     "pretest": "cross-env NODE_ENV=test npm run build && npm run swagger-gen && cross-env NODE_ENV=test npm run routes-gen && cross-env NODE_ENV=test npm run routes-gen:hapi && cross-env NODE_ENV=test npm run routes-gen:koa && cross-env NODE_ENV=test npm run routes-gen:custom && cross-env NODE_ENV=test npm run routes-gen:inversify && npm run lint",
     "test": "cross-env NODE_ENV=test mocha **/*.spec.ts --compilers ts:ts-node/register",
-    "tsc": "tsc"
+    "tsc": "/home/chau/.npm-global/lib/node_modules/typescript/bin/tsc"
   },
   "author": "Luke Autry <lukeautry@gmail.com> (http://www.lukeautry.com)",
   "license": "MIT",
