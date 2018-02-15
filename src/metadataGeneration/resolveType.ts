@@ -57,6 +57,10 @@ export function resolveType(typeNode: ts.TypeNode, parentNode?: ts.Node, extract
     return { dataType: 'any' } as Tsoa.Type;
   }
 
+  if (typeNode.kind === ts.SyntaxKind.TypeLiteral) {
+    return { dataType: 'any' } as Tsoa.Type;
+  }
+
   if (typeNode.kind !== ts.SyntaxKind.TypeReference) {
     throw new GenerateMetadataError(`Unknown type: ${ts.SyntaxKind[typeNode.kind]}`);
   }
@@ -83,6 +87,10 @@ export function resolveType(typeNode: ts.TypeNode, parentNode?: ts.Node, extract
 
     if (typeReference.typeName.text === 'Promise' && typeReference.typeArguments && typeReference.typeArguments.length === 1) {
       return resolveType(typeReference.typeArguments[0]);
+    }
+
+    if (typeReference.typeName.text === 'String') {
+      return { dataType: 'string' } as Tsoa.Type;
     }
   }
 
@@ -298,16 +306,17 @@ function getReferenceType(type: ts.EntityName, extractEnum = true, genericTypes?
     const modelType = getModelTypeDeclaration(type);
     const properties = getModelProperties(modelType, genericTypes);
     const additionalProperties = getModelAdditionalProperties(modelType);
-    const inheritedProperties = getModelInheritedProperties(modelType);
+    const inheritedProperties = getModelInheritedProperties(modelType) || [];
 
     const referenceType = {
       additionalProperties,
       dataType: 'refObject',
       description: getNodeDescription(modelType),
-      properties: properties.concat(inheritedProperties),
+      properties: inheritedProperties,
       refName: refNameWithGenerics,
     } as Tsoa.ReferenceType;
 
+    referenceType.properties = (referenceType.properties as Tsoa.Property[]).concat(properties);
     localReferenceTypeCache[refNameWithGenerics] = referenceType;
 
     return referenceType;
