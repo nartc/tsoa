@@ -1,5 +1,6 @@
 /* tslint:disable */
 import { Controller, ValidateParam, FieldErrors, ValidateError, TsoaRoute } from '../../../src';
+import { RootController } from './../controllers/rootController';
 import { DeleteTestController } from './../controllers/deleteController';
 import { GetTestController } from './../controllers/getController';
 import { PatchTestController } from './../controllers/patchController';
@@ -24,6 +25,7 @@ const models: TsoaRoute.Models={
   },
   "TestModel": {
     "properties": {
+      "id": { "dataType": "double", "required": true },
       "numberValue": { "dataType": "double", "required": true },
       "numberArray": { "dataType": "array", "array": { "dataType": "double" }, "required": true },
       "stringValue": { "dataType": "string", "required": true },
@@ -53,22 +55,21 @@ const models: TsoaRoute.Models={
       "modelsEnumIndirect": { "ref": "TestSubEnumModelContainer" },
       "typeAliasCase1": { "ref": "TypeAliasModelCase1" },
       "TypeAliasCase2": { "ref": "TypeAliasModelCase2" },
-      "id": { "dataType": "double", "required": true },
     },
   },
   "TestSubModel": {
     "properties": {
+      "id": { "dataType": "double", "required": true },
       "email": { "dataType": "string", "required": true },
       "circular": { "ref": "TestModel" },
-      "id": { "dataType": "double", "required": true },
     },
   },
   "TestSubModel2": {
     "properties": {
-      "testSubModel2": { "dataType": "boolean", "required": true },
+      "id": { "dataType": "double", "required": true },
       "email": { "dataType": "string", "required": true },
       "circular": { "ref": "TestModel" },
-      "id": { "dataType": "double", "required": true },
+      "testSubModel2": { "dataType": "boolean", "required": true },
     },
   },
   "TestSubModelContainer": {
@@ -76,10 +77,10 @@ const models: TsoaRoute.Models={
   },
   "TestSubModelNamespace.TestSubModelNS": {
     "properties": {
-      "testSubModelNS": { "dataType": "boolean", "required": true },
+      "id": { "dataType": "double", "required": true },
       "email": { "dataType": "string", "required": true },
       "circular": { "ref": "TestModel" },
-      "id": { "dataType": "double", "required": true },
+      "testSubModelNS": { "dataType": "boolean", "required": true },
     },
   },
   "TestSubModelContainerNamespace.TestSubModelContainer": {
@@ -118,16 +119,17 @@ const models: TsoaRoute.Models={
   },
   "TestClassModel": {
     "properties": {
+      "id": { "dataType": "double", "required": true },
+      "defaultValue1": { "dataType": "string", "default": "Default Value 1" },
       "account": { "ref": "Account", "required": true },
       "defaultValue2": { "dataType": "string", "default": "Default Value 2" },
       "publicStringProperty": { "dataType": "string", "required": true, "validators": { "minLength": { "value": 3 }, "maxLength": { "value": 20 }, "pattern": { "value": "^[a-zA-Z]+$" } } },
       "optionalPublicStringProperty": { "dataType": "string", "validators": { "minLength": { "value": 0 }, "maxLength": { "value": 10 } } },
       "emailPattern": { "dataType": "string", "validators": { "pattern": { "value": "^[a-zA-Z0-9_.+-]+" } } },
       "stringProperty": { "dataType": "string", "required": true },
+      "typeLiterals": { "dataType": "any", "default": { "booleanTypeLiteral": {}, "numberTypeLiteral": {}, "stringTypeLiteral": {} } },
       "publicConstructorVar": { "dataType": "string", "required": true },
       "optionalPublicConstructorVar": { "dataType": "string" },
-      "id": { "dataType": "double", "required": true },
-      "defaultValue1": { "dataType": "string", "default": "Default Value 1" },
     },
   },
   "Result": {
@@ -233,6 +235,42 @@ const models: TsoaRoute.Models={
 };
 
 export function RegisterRoutes(app: any) {
+  app.get('/v1',
+    function(request: any, response: any, next: any) {
+      const args={
+      };
+
+      let validatedArgs: any[]=[];
+      try {
+        validatedArgs=getValidatedArgs(args, request);
+      } catch (err) {
+        return next(err);
+      }
+
+      const controller=new RootController();
+
+
+      const promise=controller.rootHandler.apply(controller, validatedArgs);
+      promiseHandler(controller, promise, response, next);
+    });
+  app.get('/v1/rootControllerMethodWithPath',
+    function(request: any, response: any, next: any) {
+      const args={
+      };
+
+      let validatedArgs: any[]=[];
+      try {
+        validatedArgs=getValidatedArgs(args, request);
+      } catch (err) {
+        return next(err);
+      }
+
+      const controller=new RootController();
+
+
+      const promise=controller.rootControllerMethodWithPath.apply(controller, validatedArgs);
+      promiseHandler(controller, promise, response, next);
+    });
   app.delete('/v1/DeleteTest',
     function(request: any, response: any, next: any) {
       const args={

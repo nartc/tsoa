@@ -1,12 +1,12 @@
 import * as ts from 'typescript';
-import {getDecorators} from './../utils/decoratorUtils';
-import {getJSDocComment, getJSDocDescription, isExistJSDocTag} from './../utils/jsDocUtils';
+import { getDecorators } from './../utils/decoratorUtils';
+import { getJSDocComment, getJSDocDescription, isExistJSDocTag } from './../utils/jsDocUtils';
+import { GenerateMetadataError } from './exceptions';
+import { MetadataGenerator } from './metadataGenerator';
+import { ParameterGenerator } from './parameterGenerator';
+import { getInitializerValue, resolveType } from './resolveType';
+import { Tsoa } from './tsoa';
 import {normalisePath} from './../utils/pathUtils';
-import {GenerateMetadataError} from './exceptions';
-import {MetadataGenerator} from './metadataGenerator';
-import {ParameterGenerator} from './parameterGenerator';
-import {getInitializerValue, resolveType} from './resolveType';
-import {Tsoa} from './tsoa';
 
 export class MethodGenerator {
   private method: 'get' | 'post' | 'put' | 'patch' | 'delete';
@@ -45,7 +45,7 @@ export class MethodGenerator {
       method: this.method,
       name: (this.node.name as ts.Identifier).text,
       parameters: this.buildParameters(),
-      path: normalisePath(this.path as string, '/'),
+      path: this.path,
       responses,
       security: this.getSecurity(),
       summary: getJSDocComment(this.node, 'summary'),
