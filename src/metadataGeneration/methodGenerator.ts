@@ -6,7 +6,6 @@ import { MetadataGenerator } from './metadataGenerator';
 import { ParameterGenerator } from './parameterGenerator';
 import { getInitializerValue, resolveType } from './resolveType';
 import { Tsoa } from './tsoa';
-import {normalisePath} from './../utils/pathUtils';
 
 export class MethodGenerator {
   private method: 'get' | 'post' | 'put' | 'patch' | 'delete';
