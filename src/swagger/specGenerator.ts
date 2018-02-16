@@ -259,7 +259,7 @@ export class SpecGenerator {
     });
 
     const operation: Swagger.Operation = {
-      operationId: this.getOperationId(method.name),
+      operationId: controllerName.slice(0, -10) + '_' + this.getOperationId(method.name),
       produces: ['application/json'],
       responses: swaggerResponses,
     };
