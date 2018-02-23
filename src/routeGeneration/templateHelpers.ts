@@ -1,6 +1,6 @@
 import * as moment from 'moment';
 import * as validator from 'validator';
-import { TsoaRoute } from './tsoa-route';
+import {TsoaRoute} from './tsoa-route';
 
 let models: TsoaRoute.Models = {};
 
@@ -43,7 +43,7 @@ export function ValidateParam(property: TsoaRoute.PropertySchema, value: any, ge
     case 'enum':
       return validateEnum(name, value, fieldErrors, property.enums, parent);
     case 'array':
-      return validateArray(name, value, fieldErrors, property.array, property.validators, parent);
+      return validateArray(name, value, fieldErrors, property.enums ? (property.enums as TsoaRoute.PropertySchema) : property.array, property.validators, parent);
     case 'date':
       return validateDate(name, value, fieldErrors, property.validators, parent);
     case 'datetime':
@@ -80,7 +80,9 @@ export function validateInt(name: string, value: any, fieldErrors: FieldErrors, 
   }
 
   const numberValue = validator.toInt(String(value), 10);
-  if (!validators) { return numberValue; }
+  if (!validators) {
+    return numberValue;
+  }
   if (validators.minimum && validators.minimum.value) {
     if (validators.minimum.value > numberValue) {
       fieldErrors[parent + name] = {
@@ -121,7 +123,9 @@ export function validateFloat(name: string, value: any, fieldErrors: FieldErrors
   }
 
   const numberValue = validator.toFloat(String(value));
-  if (!validators) { return numberValue; }
+  if (!validators) {
+    return numberValue;
+  }
   if (validators.minimum && validators.minimum.value) {
     if (validators.minimum.value > numberValue) {
       fieldErrors[parent + name] = {
@@ -176,7 +180,9 @@ export function validateDate(name: string, value: any, fieldErrors: FieldErrors,
   }
 
   const dateValue = new Date(String(value));
-  if (!validators) { return dateValue; }
+  if (!validators) {
+    return dateValue;
+  }
   if (validators.minDate && validators.minDate.value) {
     const minDate = new Date(validators.minDate.value);
     if (minDate.getTime() > dateValue.getTime()) {
@@ -212,7 +218,9 @@ export function validateDateTime(name: string, value: any, fieldErrors: FieldErr
   }
 
   const datetimeValue = new Date(String(value));
-  if (!validators) { return datetimeValue; }
+  if (!validators) {
+    return datetimeValue;
+  }
   if (validators.minDate && validators.minDate.value) {
     const minDate = new Date(validators.minDate.value);
     if (minDate.getTime() > datetimeValue.getTime()) {
@@ -247,7 +255,9 @@ export function validateString(name: string, value: any, fieldErrors: FieldError
   }
 
   const stringValue = String(value);
-  if (!validators) { return stringValue; }
+  if (!validators) {
+    return stringValue;
+  }
   if (validators.minLength && validators.minLength.value) {
     if (validators.minLength.value > stringValue.length) {
       fieldErrors[parent + name] = {
@@ -282,9 +292,15 @@ export function validateBool(name: string, value: any, fieldErrors: FieldErrors,
   if (value === undefined || value === null) {
     return false;
   }
-  if (value === true || value === false) { return value; }
-  if (String(value).toLowerCase() === 'true') { return true; }
-  if (String(value).toLowerCase() === 'false') { return false; }
+  if (value === true || value === false) {
+    return value;
+  }
+  if (String(value).toLowerCase() === 'true') {
+    return true;
+  }
+  if (String(value).toLowerCase() === 'false') {
+    return false;
+  }
 
   const message = (validators && validators.isArray && validators.isArray.errorMsg) ? validators.isArray.errorMsg : `invalid boolean value`;
   fieldErrors[parent + name] = {
@@ -456,6 +472,8 @@ export class ValidateError implements Exception {
   public status = 400;
   public name = 'ValidateError';
 
-  constructor(public fields: FieldErrors, public message: string) { }
+  constructor(public fields: FieldErrors, public message: string) {
+  }
 }
+
 export * from './tsoa-route';
