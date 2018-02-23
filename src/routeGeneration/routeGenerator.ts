@@ -212,7 +212,13 @@ export class RouteGenerator {
     }
 
     if (type.dataType === 'enum') {
-      schema.enums = (type as Tsoa.EnumerateType).enums;
+      if ((type as Tsoa.EnumerateType).enums[0] === 'multi') {
+        schema.dataType = 'array';
+        (type as Tsoa.EnumerateType).enums.shift();
+        schema.enums = (type as Tsoa.EnumerateType).enums;
+      } else {
+        schema.enums = (type as Tsoa.EnumerateType).enums;
+      }
     }
     return schema;
   }

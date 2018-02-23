@@ -1,10 +1,11 @@
-import { Tsoa } from '../metadataGeneration/tsoa';
-import { SwaggerConfig } from './../config';
-import { normalisePath } from './../utils/pathUtils';
-import { Swagger } from './swagger';
+import {Tsoa} from '../metadataGeneration/tsoa';
+import {SwaggerConfig} from './../config';
+import {normalisePath} from './../utils/pathUtils';
+import {Swagger} from './swagger';
 
 export class SpecGenerator {
-  constructor(private readonly metadata: Tsoa.Metadata, private readonly config: SwaggerConfig) { }
+  constructor(private readonly metadata: Tsoa.Metadata, private readonly config: SwaggerConfig) {
+  }
 
   public GetSpec() {
     let spec: Swagger.Spec = {
@@ -21,9 +22,15 @@ export class SpecGenerator {
       ? this.config.securityDefinitions
       : {};
 
-    if (this.config.info) { spec.info = this.config.info; }
-    if (this.config.host) { spec.host = this.config.host; }
-    if (this.config.tags) { spec.tags = this.config.tags; }
+    if (this.config.info) {
+      spec.info = this.config.info;
+    }
+    if (this.config.host) {
+      spec.host = this.config.host;
+    }
+    if (this.config.tags) {
+      spec.tags = this.config.tags;
+    }
     if (this.config.spec) {
       this.config.specMerging = this.config.specMerging || 'immediate';
       const mergeFuncs: { [key: string]: any } = {
@@ -62,7 +69,10 @@ export class SpecGenerator {
         definitions[referenceType.refName] = {
           description: referenceType.description,
           enum: referenceType.enums,
-          type: 'string',
+          items: {
+            type: 'string',
+          },
+          type: 'array',
         };
       }
     });
@@ -141,7 +151,9 @@ export class SpecGenerator {
         }
       });
 
-    if (!Object.keys(properties).length) { return; }
+    if (!Object.keys(properties).length) {
+      return;
+    }
 
     const parameter = {
       in: 'body',
@@ -170,7 +182,7 @@ export class SpecGenerator {
     const parameterType = this.getSwaggerType(source.type);
     parameter.format = parameterType.format || undefined;
 
-    if (parameter.in === 'query' && parameter.type === 'array') {
+    if (parameter.in === 'query' && parameterType.type === 'array' && parameterType.items !== null) {
       (parameter as Swagger.QueryParameter).collectionFormat = 'multi';
     }
 
@@ -196,7 +208,7 @@ export class SpecGenerator {
     } else {
       if (source.type.dataType === 'any') {
         if (source.in === 'body') {
-          parameter.schema = { type: 'object' };
+          parameter.schema = {type: 'object'};
         } else {
           parameter.type = 'string';
         }
@@ -254,7 +266,7 @@ export class SpecGenerator {
         swaggerResponses[res.name].schema = this.getSwaggerType(res.schema);
       }
       if (res.examples) {
-        swaggerResponses[res.name].examples = { 'application/json': res.examples };
+        swaggerResponses[res.name].examples = {'application/json': res.examples};
       }
     });
 
@@ -288,6 +300,10 @@ export class SpecGenerator {
     }
 
     if (type.dataType === 'enum') {
+      if ((type as Tsoa.EnumerateType).enums[0] === 'multi') {
+        (type as Tsoa.EnumerateType).enums.shift();
+        return this.getSwaggerTypeForEnumTypeMulti(type as Tsoa.EnumerateType);
+      }
       return this.getSwaggerTypeForEnumType(type as Tsoa.EnumerateType);
     }
 
@@ -296,34 +312,45 @@ export class SpecGenerator {
 
   private getSwaggerTypeForPrimitiveType(type: Tsoa.Type): Swagger.Schema | undefined {
     const map = {
-      any: { type: 'object' },
-      binary: { type: 'string', format: 'binary' },
-      boolean: { type: 'boolean' },
-      buffer: { type: 'string', format: 'byte' },
-      byte: { type: 'string', format: 'byte' },
-      date: { type: 'string', format: 'date' },
-      datetime: { type: 'string', format: 'date-time' },
-      double: { type: 'number', format: 'double' },
-      float: { type: 'number', format: 'float' },
-      integer: { type: 'integer', format: 'int32' },
-      long: { type: 'integer', format: 'int64' },
-      object: { type: 'object' },
-      string: { type: 'string' },
-      file: { type: 'file'},
+      any: {type: 'object'},
+      binary: {type: 'string', format: 'binary'},
+      boolean: {type: 'boolean'},
+      buffer: {type: 'string', format: 'byte'},
+      byte: {type: 'string', format: 'byte'},
+      date: {type: 'string', format: 'date'},
+      datetime: {type: 'string', format: 'date-time'},
+      double: {type: 'number', format: 'double'},
+      file: {type: 'file'},
+      float: {type: 'number', format: 'float'},
+      integer: {type: 'integer', format: 'int32'},
+      long: {type: 'integer', format: 'int64'},
+      object: {type: 'object'},
+      string: {type: 'string'},
     } as { [name: string]: Swagger.Schema };
 
     return map[type.dataType];
   }
 
   private getSwaggerTypeForArrayType(arrayType: Tsoa.ArrayType): Swagger.Schema {
-    return { type: 'array', items: this.getSwaggerType(arrayType.elementType) };
+    return {type: 'array', items: this.getSwaggerType(arrayType.elementType)};
   }
 
   private getSwaggerTypeForEnumType(enumType: Tsoa.EnumerateType): Swagger.Schema {
-    return { type: 'string', enum: enumType.enums.map(member => String(member)) };
+    return {type: 'string', enum: enumType.enums.map(member => String(member))};
+  }
+
+  private getSwaggerTypeForEnumTypeMulti(multiEnumType: Tsoa.EnumerateType): Swagger.Schema {
+    return {
+      items: {
+        default: multiEnumType.enums.map(member => String(member))[0],
+        enum: multiEnumType.enums.map(member => String(member)),
+        type: 'string',
+      },
+      type: 'array',
+    };
   }
 
   private getSwaggerTypeForReferenceType(referenceType: Tsoa.ReferenceType): Swagger.BaseSchema {
-    return { $ref: `#/definitions/${referenceType.refName}` };
+    return {$ref: `#/definitions/${referenceType.refName}`};
   }
 }
