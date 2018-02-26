@@ -69,10 +69,7 @@ export class SpecGenerator {
         definitions[referenceType.refName] = {
           description: referenceType.description,
           enum: referenceType.enums,
-          items: {
-            type: 'string',
-          },
-          type: 'array',
+          type: 'string',
         };
       }
     });
