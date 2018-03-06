@@ -21,6 +21,7 @@ export interface TestFile {
 
 /**
  * This is a description of a model
+ * @tsoaModel
  */
 export interface TestModel extends Model {
   /**
@@ -238,6 +239,11 @@ export class ValidateModel {
    * @uniqueItems
    */
   public arrayUniqueItem: number[];
+
+  /**
+   * @ignore
+   */
+  public ignoredProperty: string;
 }
 
 /**

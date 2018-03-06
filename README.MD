@@ -102,6 +102,18 @@ tsoa routes
 
 See [CLI documentation](#command-line-interface)
 
+### Dealing with duplicate model names
+If you have multiple models with the same name, you may get errors indicating that there are multiple matching models. If you'd like to designate a class/interface as the 'canonical' version of a model, add a jsdoc element marking it as such:
+
+```
+/**
+ * @tsoaModel
+ */
+export interface MyModel {
+    ...
+}
+```
+
 ### Override route template
 Route templates are generated from predefined handlebar templates. You can override and define your own template to use
 by defining it in your tsoa.json configuration. Route paths are generated based on the middleware type you have defined.
@@ -167,7 +179,11 @@ In this case you should write your own custom template where you inject the need
 ### Dependency injection / IOC
 
 By default all the controllers are created by the auto-generated routes template using an empty default constructor.
-If you want to use dependency injection and let the DI-framework handle the creation of your controllers you can use [inversifyJS](https://github.com/inversify/InversifyJS).
+If you want to use dependency injection and let the DI-framework handle the creation of your controllers you can use [inversifyJS](https://github.com/inversify/InversifyJS) or [typescript-ioc] (https://github.com/thiagobustamante/typescript-ioc)
+
+#### Inversify.js
+
+
 To tell `tsoa` to use your DI-container you have to reference your module exporting the DI-container in the config file (e.g. `tsoa.json`):
 The convention is that you have to name your inversify `Container` `iocContainer` and export it in the given module.
 ```json
@@ -186,7 +202,7 @@ The convention is that you have to name your inversify `Container` `iocContainer
 ```
 Note that as of 1.1.1 the path is now relative to the your current working directory like the other paths.
 
-Here is some example code how to setup the container and your controller.
+Here is some example code to setup the container and your controller with inversify.js.
 
 `./inversify/ioc.ts`:
 ```ts
@@ -239,6 +255,39 @@ export class FooService {
         // maybe even more dependencies to be injected...
     )
 }
+```
+
+#### typescript-ioc
+
+Here is some example code to setup the controller with typescript-ioc.
+
+`./contollers/fooController.ts`
+```ts
+import { Route } from 'tsoa';
+import { Inject, Provides } from "typescript-ioc";
+
+@Route('foo')
+export class FooController {
+
+  @Inject
+  private fooService: FooService
+  ...
+
+}
+
+@Provides(FooService)
+export class FooService {
+
+}
+```
+
+The controllers need to be included in the application in order to be linked.
+
+`index.ts`
+```ts
+import "./contollers/fooController.ts"
+...
+
 ```
 
 ### Specify error response types for Swagger
@@ -399,6 +448,76 @@ If you have a project that utilized this functionality, you can configure the in
             "exampleLib": "./path/to/example/lib"
         }
     }
+}
+```
+
+### Upload files
+
+This requires to have multer installed:
+
+`npm install --save multer`
+
+Inside a controller resource, call handleFile and pass the express Request to resolve 'file'. This also handles multipart/form-data. A quick sample:
+
+```ts
+import { Get, Route, Security, Response } from 'tsoa';
+import * as express from 'express';
+import * as multer from 'multer';
+
+@Route('files')
+export class FilesController {
+
+    @Post('uploadFile')
+    public async uploadFile(@Request() request: express.Request): Promise<any> {
+        await this.handleFile(request);
+        // file will be in request.randomFileIsHere, it is a buffer
+        return {};
+    }
+    
+    private handleFile(request: express.Request): Promise<any> {
+        const multerSingle = multer().single('randomFileIsHere');
+        return new Promise((resolve, reject) => {
+            multerSingle(request, undefined, async (error) => {
+                if (error) {
+                    reject(error);
+                }
+                resolve();
+            });
+        });
+    }
+}
+```
+
+The according swagger definition can be merge-overwritten inside `tsoa.json`. Here is a quick sample, what the previous request should look like.
+
+```json
+{
+  "swagger": {
+    ...
+    "specMerging": "recursive",
+    "spec": {
+      "paths": {
+        "/files/uploadFile": {
+          "post": {
+            "consumes": [
+              "multipart/form-data"
+            ],
+            "parameters": [
+              {
+                "in": "formData",
+                "name": "randomFileIsHere",
+                "required": true,
+                "type": "file"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "routes": {
+     ...
+  }
 }
 ```
 
